@@ -1,0 +1,46 @@
+version: '3.3'
+
+services:
+
+  mongo:
+    image: mongo:${MONGO_VERSION:-latest}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - front_net
+      - back_net
+
+  rabbit:
+    image: rabbitmq:${RABBITMQ_VERSION:-latest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - front_net
+      - back_net
+
+  ui:
+    image: jugatsu/search_engine_ui:${UI_VERSION:-latest}
+    ports:
+      - "8000:8000"
+    networks:
+      - front_net
+
+  crawler:
+    image: jugatsu/search_engine_crawler:${CRAWLER_VERSION:-latest}
+    depends_on: [rabbit]
+    command: https://vitkhab.github.io/search_engine_test_site/
+    environment:
+      - CHECK_INTERVAL=120
+      - EXCLUDE_URLS='.*github.com'
+    ports:
+      - "8080:8000"
+    networks:
+      - back_net
+
+volumes:
+  mongo_data: {}
+  rabbitmq_data: {}
+
+networks:
+  back_net: {}
+  front_net: {}
